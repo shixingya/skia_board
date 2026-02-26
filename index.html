@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SkiaBoard — 专业画板</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Sora:wght@300;400;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #111113;
+      --panel: #1a1a1e;
+      --panel-border: #2a2a30;
+      --accent: #7c6fcd;
+      --accent2: #4ecdc4;
+      --text: #e8e8f0;
+      --text-dim: #888899;
+      --danger: #ff6b6b;
+      --tool-size: 40px;
+      --sidebar-w: 60px;
+      --prop-w: 220px;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Sora', sans-serif;
+      height: 100vh;
+      width: 100vw;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── TOP BAR ── */
+    #topbar {
+      height: 44px;
+      background: var(--panel);
+      border-bottom: 1px solid var(--panel-border);
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      gap: 12px;
+      z-index: 100;
+      flex-shrink: 0;
+    }
+    .logo {
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: -0.5px;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .logo span { color: var(--accent); }
+    #topbar-actions {
+      margin-left: auto;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .btn {
+      background: var(--panel-border);
+      border: 1px solid #333340;
+      color: var(--text);
+      padding: 5px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-family: 'DM Mono', monospace;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .btn:hover { background: #2e2e38; border-color: var(--accent); }
+    .btn.danger:hover { background: rgba(255,107,107,0.15); border-color: var(--danger); color: var(--danger); }
+    .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .btn.primary:hover { background: #6a5fc0; }
+
+    /* ── MAIN LAYOUT ── */
+    #workspace {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    /* ── LEFT TOOLBAR ── */
+    #toolbar {
+      width: var(--sidebar-w);
+      background: var(--panel);
+      border-right: 1px solid var(--panel-border);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 10px 0;
+      gap: 4px;
+      z-index: 50;
+    }
+    .tool-group {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      padding: 4px 0;
+      border-bottom: 1px solid var(--panel-border);
+    }
+    .tool-group:last-child { border-bottom: none; }
+    .tool-btn {
+      width: var(--tool-size);
+      height: var(--tool-size);
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-dim);
+      transition: all 0.15s;
+      position: relative;
+    }
+    .tool-btn:hover { background: rgba(124,111,205,0.1); color: var(--text); border-color: var(--panel-border); }
+    .tool-btn.active { background: rgba(124,111,205,0.2); color: var(--accent); border-color: var(--accent); }
+    .tool-btn svg { width: 18px; height: 18px; }
+    .tool-tip {
+      position: absolute;
+      left: calc(100% + 10px);
+      background: #2e2e38;
+      border: 1px solid var(--panel-border);
+      color: var(--text);
+      font-size: 11px;
+      font-family: 'DM Mono', monospace;
+      padding: 4px 8px;
+      border-radius: 5px;
+      white-space: nowrap;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.15s;
+      z-index: 999;
+    }
+    .tool-btn:hover .tool-tip { opacity: 1; }
+
+    /* ── CANVAS AREA ── */
+    #canvas-container {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+      background: #0d0d10;
+      background-image:
+        radial-gradient(circle, #22222a 1px, transparent 1px);
+      background-size: 24px 24px;
+    }
+    #main-canvas {
+      position: absolute;
+      top: 0; left: 0;
+      cursor: crosshair;
+    }
+    #overlay-canvas {
+      position: absolute;
+      top: 0; left: 0;
+      cursor: crosshair;
+      pointer-events: none;
+    }
+    #interaction-canvas {
+      position: absolute;
+      top: 0; left: 0;
+      cursor: crosshair;
+    }
+
+    /* ── RIGHT PANEL ── */
+    #right-panel {
+      width: var(--prop-w);
+      background: var(--panel);
+      border-left: 1px solid var(--panel-border);
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      font-size: 12px;
+    }
+    .panel-section {
+      padding: 12px;
+      border-bottom: 1px solid var(--panel-border);
+    }
+    .panel-title {
+      font-size: 10px;
+      font-family: 'DM Mono', monospace;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 10px;
+    }
+    .prop-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      gap: 8px;
+    }
+    .prop-label { color: var(--text-dim); font-size: 11px; }
+    .prop-input {
+      background: var(--bg);
+      border: 1px solid var(--panel-border);
+      border-radius: 5px;
+      color: var(--text);
+      padding: 4px 8px;
+      font-size: 12px;
+      font-family: 'DM Mono', monospace;
+      width: 80px;
+      text-align: right;
+    }
+    .prop-input:focus { outline: none; border-color: var(--accent); }
+    .color-swatch {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      border: 2px solid var(--panel-border);
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.15s;
+    }
+    .color-swatch:hover { border-color: var(--accent); }
+    .color-swatch input[type=color] {
+      position: absolute;
+      width: 200%;
+      height: 200%;
+      top: -50%;
+      left: -50%;
+      cursor: pointer;
+      opacity: 0;
+    }
+    .slider {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 4px;
+      border-radius: 2px;
+      background: var(--panel-border);
+      outline: none;
+      margin: 6px 0;
+    }
+    .slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: var(--accent);
+      cursor: pointer;
+    }
+
+    /* ── BOOLEAN OPS ── */
+    .bool-ops {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+    }
+    .bool-btn {
+      background: var(--bg);
+      border: 1px solid var(--panel-border);
+      border-radius: 6px;
+      color: var(--text-dim);
+      padding: 7px 6px;
+      font-size: 10px;
+      font-family: 'DM Mono', monospace;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.15s;
+    }
+    .bool-btn:hover { border-color: var(--accent); color: var(--accent); background: rgba(124,111,205,0.08); }
+
+    /* ── LAYERS ── */
+    #layers-list {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+    .layer-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 8px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 11px;
+      color: var(--text-dim);
+      background: transparent;
+      border: 1px solid transparent;
+      transition: all 0.1s;
+    }
+    .layer-item:hover { background: rgba(255,255,255,0.04); }
+    .layer-item.selected { background: rgba(124,111,205,0.12); border-color: rgba(124,111,205,0.3); color: var(--text); }
+    .layer-dot { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
+    .layer-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .layer-del { opacity: 0; color: var(--danger); font-size: 14px; line-height: 1; padding: 0 2px; }
+    .layer-item:hover .layer-del { opacity: 0.6; }
+    .layer-del:hover { opacity: 1 !important; }
+
+    /* ── STATUS BAR ── */
+    #statusbar {
+      height: 26px;
+      background: var(--panel);
+      border-top: 1px solid var(--panel-border);
+      display: flex;
+      align-items: center;
+      padding: 0 14px;
+      gap: 16px;
+      font-size: 10px;
+      font-family: 'DM Mono', monospace;
+      color: var(--text-dim);
+      flex-shrink: 0;
+      z-index: 100;
+    }
+    #statusbar span { display: flex; align-items: center; gap: 4px; }
+
+    /* ── ZOOM CONTROLS ── */
+    #zoom-controls {
+      position: absolute;
+      bottom: 14px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 4px;
+      background: var(--panel);
+      border: 1px solid var(--panel-border);
+      border-radius: 8px;
+      padding: 4px;
+      z-index: 50;
+    }
+    .zoom-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-dim);
+      width: 28px; height: 28px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.1s;
+    }
+    .zoom-btn:hover { background: rgba(255,255,255,0.08); color: var(--text); }
+    #zoom-label { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--text-dim); padding: 0 6px; display: flex; align-items: center; }
+
+    /* ── SELECTION HANDLES ── */
+    .select-handle {
+      position: absolute;
+      width: 8px; height: 8px;
+      background: white;
+      border: 2px solid var(--accent);
+      border-radius: 2px;
+      transform: translate(-50%, -50%);
+      z-index: 10;
+    }
+
+    /* ── TOAST ── */
+    #toast {
+      position: fixed;
+      bottom: 50px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: #2e2e38;
+      border: 1px solid var(--panel-border);
+      color: var(--text);
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-family: 'DM Mono', monospace;
+      opacity: 0;
+      transition: all 0.3s;
+      pointer-events: none;
+      z-index: 9999;
+    }
+    #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--panel-border); border-radius: 2px; }
+  </style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div id="topbar">
+  <div class="logo">⬡ <span>Skia</span>Board</div>
+  <div id="topbar-actions">
+    <button class="btn" onclick="app.undo()">↩ 撤销</button>
+    <button class="btn" onclick="app.redo()">↪ 重做</button>
+    <button class="btn danger" onclick="app.clearAll()">清空</button>
+    <button class="btn primary" onclick="app.exportPNG()">导出 PNG</button>
+  </div>
+</div>
+
+<!-- WORKSPACE -->
+<div id="workspace">
+
+  <!-- LEFT TOOLBAR -->
+  <div id="toolbar">
+    <div class="tool-group">
+      <button class="tool-btn active" data-tool="select" onclick="app.setTool('select')" title="选择">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 3l14 9-7 1-4 7z"/></svg>
+        <span class="tool-tip">选择 (V)</span>
+      </button>
+    </div>
+    <div class="tool-group">
+      <button class="tool-btn" data-tool="pen" onclick="app.setTool('pen')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="M2 2l7.586 7.586"/><circle cx="11" cy="11" r="2"/></svg>
+        <span class="tool-tip">钢笔 (P)</span>
+      </button>
+      <button class="tool-btn" data-tool="brush" onclick="app.setTool('brush')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 000-1.41l-2.34-2.34a1 1 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+        <span class="tool-tip">画笔 (B)</span>
+      </button>
+      <button class="tool-btn" data-tool="eraser" onclick="app.setTool('eraser')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 20H7L3 16l11-11 6 6-4 4"/><path d="M6.0001 15.0001L9 18"/></svg>
+        <span class="tool-tip">橡皮擦 (E)</span>
+      </button>
+    </div>
+    <div class="tool-group">
+      <button class="tool-btn" data-tool="rect" onclick="app.setTool('rect')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
+        <span class="tool-tip">矩形 (R)</span>
+      </button>
+      <button class="tool-btn" data-tool="circle" onclick="app.setTool('circle')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg>
+        <span class="tool-tip">圆形 (C)</span>
+      </button>
+      <button class="tool-btn" data-tool="line" onclick="app.setTool('line')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="19" x2="19" y2="5"/></svg>
+        <span class="tool-tip">直线 (L)</span>
+      </button>
+      <button class="tool-btn" data-tool="triangle" onclick="app.setTool('triangle')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12,3 22,21 2,21"/></svg>
+        <span class="tool-tip">三角形 (T)</span>
+      </button>
+    </div>
+    <div class="tool-group">
+      <button class="tool-btn" data-tool="text" onclick="app.setTool('text')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
+        <span class="tool-tip">文字 (X)</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- CANVAS CONTAINER -->
+  <div id="canvas-container">
+    <canvas id="main-canvas"></canvas>
+    <canvas id="overlay-canvas"></canvas>
+    <canvas id="interaction-canvas"></canvas>
+    <div id="zoom-controls">
+      <button class="zoom-btn" onclick="app.zoom(-0.1)">−</button>
+      <span id="zoom-label">100%</span>
+      <button class="zoom-btn" onclick="app.zoom(0.1)">+</button>
+      <button class="zoom-btn" onclick="app.resetZoom()" title="重置">⌂</button>
+    </div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div id="right-panel">
+    <!-- Fill & Stroke -->
+    <div class="panel-section">
+      <div class="panel-title">外观</div>
+      <div class="prop-row">
+        <span class="prop-label">填充</span>
+        <div class="color-swatch" id="fill-swatch" style="background:#7c6fcd">
+          <input type="color" id="fill-color" value="#7c6fcd" oninput="app.setFillColor(this.value)">
+        </div>
+        <label style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--text-dim)">
+          <input type="checkbox" id="fill-enabled" checked onchange="app.setFillEnabled(this.checked)"> 填充
+        </label>
+      </div>
+      <div class="prop-row">
+        <span class="prop-label">描边</span>
+        <div class="color-swatch" id="stroke-swatch" style="background:#4ecdc4">
+          <input type="color" id="stroke-color" value="#4ecdc4" oninput="app.setStrokeColor(this.value)">
+        </div>
+        <label style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--text-dim)">
+          <input type="checkbox" id="stroke-enabled" checked onchange="app.setStrokeEnabled(this.checked)"> 描边
+        </label>
+      </div>
+      <div class="prop-row">
+        <span class="prop-label">线宽</span>
+        <input class="prop-input" type="number" id="stroke-width" value="2" min="0.5" max="50" step="0.5" oninput="app.setStrokeWidth(this.value)">
+      </div>
+      <div class="prop-row" style="flex-direction:column;align-items:stretch;gap:4px">
+        <div style="display:flex;justify-content:space-between">
+          <span class="prop-label">不透明度</span>
+          <span class="prop-label" id="opacity-val">100%</span>
+        </div>
+        <input type="range" class="slider" id="opacity-slider" min="0" max="100" value="100" oninput="app.setOpacity(this.value)">
+      </div>
+    </div>
+
+    <!-- Brush settings -->
+    <div class="panel-section" id="brush-settings">
+      <div class="panel-title">画笔设置</div>
+      <div class="prop-row" style="flex-direction:column;align-items:stretch;gap:4px">
+        <div style="display:flex;justify-content:space-between">
+          <span class="prop-label">笔刷大小</span>
+          <span class="prop-label" id="brush-size-val">8px</span>
+        </div>
+        <input type="range" class="slider" id="brush-size" min="1" max="80" value="8" oninput="app.setBrushSize(this.value)">
+      </div>
+      <div class="prop-row">
+        <span class="prop-label">笔刷类型</span>
+        <select id="brush-type" style="background:var(--bg);border:1px solid var(--panel-border);color:var(--text);border-radius:5px;padding:4px 6px;font-size:11px" onchange="app.setBrushType(this.value)">
+          <option value="round">圆形</option>
+          <option value="flat">扁形</option>
+          <option value="spray">喷雾</option>
+          <option value="marker">马克笔</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Boolean Ops -->
+    <div class="panel-section">
+      <div class="panel-title">路径运算</div>
+      <div class="bool-ops">
+        <button class="bool-btn" onclick="app.boolOp('union')">⊕ 并集</button>
+        <button class="bool-btn" onclick="app.boolOp('intersect')">⊗ 交集</button>
+        <button class="bool-btn" onclick="app.boolOp('difference')">⊖ 差集</button>
+        <button class="bool-btn" onclick="app.boolOp('xor')">⊻ 异或</button>
+      </div>
+    </div>
+
+    <!-- Align -->
+    <div class="panel-section">
+      <div class="panel-title">对齐</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px">
+        <button class="bool-btn" onclick="app.align('left')">⇤ 左</button>
+        <button class="bool-btn" onclick="app.align('centerH')">↔ 居中</button>
+        <button class="bool-btn" onclick="app.align('right')">⇥ 右</button>
+        <button class="bool-btn" onclick="app.align('top')">⇡ 上</button>
+        <button class="bool-btn" onclick="app.align('centerV')">↕ 居中</button>
+        <button class="bool-btn" onclick="app.align('bottom')">⇣ 下</button>
+      </div>
+    </div>
+
+    <!-- Selected object props -->
+    <div class="panel-section" id="obj-props" style="display:none">
+      <div class="panel-title">变换</div>
+      <div class="prop-row">
+        <span class="prop-label">X</span>
+        <input class="prop-input" type="number" id="prop-x" oninput="app.updateSelectedProp('x',this.value)">
+        <span class="prop-label">Y</span>
+        <input class="prop-input" type="number" id="prop-y" oninput="app.updateSelectedProp('y',this.value)">
+      </div>
+      <div class="prop-row">
+        <span class="prop-label">W</span>
+        <input class="prop-input" type="number" id="prop-w" oninput="app.updateSelectedProp('w',this.value)">
+        <span class="prop-label">H</span>
+        <input class="prop-input" type="number" id="prop-h" oninput="app.updateSelectedProp('h',this.value)">
+      </div>
+      <div class="prop-row">
+        <span class="prop-label">角度</span>
+        <input class="prop-input" type="number" id="prop-r" value="0" oninput="app.updateSelectedProp('r',this.value)">
+      </div>
+    </div>
+
+    <!-- Layers -->
+    <div class="panel-section" style="flex:1">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <div class="panel-title" style="margin-bottom:0">图层</div>
+        <div style="display:flex;gap:4px">
+          <button class="bool-btn" style="padding:3px 6px" onclick="app.moveLayer(-1)" title="上移">↑</button>
+          <button class="bool-btn" style="padding:3px 6px" onclick="app.moveLayer(1)" title="下移">↓</button>
+        </div>
+      </div>
+      <div id="layers-list"></div>
+    </div>
+  </div>
+</div>
+
+<!-- STATUS BAR -->
+<div id="statusbar">
+  <span id="stat-tool">工具: 选择</span>
+  <span id="stat-pos">X: 0, Y: 0</span>
+  <span id="stat-count">对象: 0</span>
+  <span id="stat-selected">未选择</span>
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<!-- Text input overlay -->
+<div id="text-input-wrapper" style="position:fixed;display:none;z-index:1000">
+  <input id="text-input" style="background:transparent;border:none;border-bottom:2px solid var(--accent);color:var(--text);font-family:'Sora',sans-serif;font-size:18px;outline:none;min-width:100px" placeholder="输入文字...">
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>

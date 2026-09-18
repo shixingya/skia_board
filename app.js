@@ -137,13 +137,13 @@ class SkiaBoard {
     const cursorMap = {
       select: 'default', pen: 'crosshair', brush: 'crosshair',
       eraser: 'cell', rect: 'crosshair', circle: 'crosshair',
-      line: 'crosshair', triangle: 'crosshair', text: 'text'
+      line: 'crosshair', triangle: 'crosshair', text: 'text', hand: 'grab'
     };
     this.interactionCanvas.style.cursor = cursorMap[t] || 'crosshair';
   }
 
   toolName(t) {
-    const m = { select: '选择', pen: '钢笔', brush: '画笔', eraser: '橡皮擦', rect: '矩形', circle: '圆形', line: '直线', triangle: '三角形', text: '文字' };
+    const m = { select: '选择', pen: '钢笔', brush: '画笔', eraser: '橡皮擦', rect: '矩形', circle: '圆形', line: '直线', triangle: '三角形', text: '文字', hand: '平移' };
     return m[t] || t;
   }
 
@@ -554,7 +554,7 @@ class SkiaBoard {
     const pos = this.getMousePos(e);
     document.getElementById('stat-pos').textContent = `X: ${Math.round(pos.x)}, Y: ${Math.round(pos.y)}`;
 
-    if (e.button === 1 || (e.button === 0 && this.spaceDown)) {
+    if (e.button === 1 || (e.button === 0 && (this.spaceDown || this.tool === 'hand'))) {
       this.isPanning = true;
       this.panStart = { x: e.clientX, y: e.clientY };
       this.panViewStart = { x: this.viewX, y: this.viewY };
@@ -600,7 +600,7 @@ class SkiaBoard {
   onMouseUp(e) {
     if (this.isPanning) {
       this.isPanning = false;
-      this.interactionCanvas.style.cursor = this.spaceDown ? 'grab' : (this.tool === 'select' ? 'default' : 'crosshair');
+      this.interactionCanvas.style.cursor = this.tool === 'hand' ? 'grab' : (this.spaceDown ? 'grab' : (this.tool === 'select' ? 'default' : 'crosshair'));
       return;
     }
 
@@ -1263,7 +1263,11 @@ class SkiaBoard {
 
   /* ── ZOOM ── */
   zoom(delta) {
-    const cx = this.canvasW / 2, cy = this.canvasH / 2;
+    this.zoomAt(this.canvasW / 2, this.canvasH / 2, delta);
+  }
+
+  /** 以屏幕坐标 (cx, cy) 为中心缩放（支持双击/捏合定位缩放） */
+  zoomAt(cx, cy, delta) {
     this.viewX = cx - (cx - this.viewX) * (1 + delta);
     this.viewY = cy - (cy - this.viewY) * (1 + delta);
     this.scale *= (1 + delta);
@@ -1398,7 +1402,7 @@ class SkiaBoard {
       this.interactionCanvas.style.cursor = 'grab';
     }
 
-    const keyMap = { v: 'select', p: 'pen', b: 'brush', e: 'eraser', r: 'rect', c: 'circle', l: 'line', t: 'triangle', x: 'text' };
+    const keyMap = { v: 'select', p: 'pen', b: 'brush', e: 'eraser', r: 'rect', c: 'circle', l: 'line', t: 'triangle', x: 'text', h: 'hand' };
     if (keyMap[e.key.toLowerCase()] && !e.ctrlKey && !e.metaKey) {
       this.setTool(keyMap[e.key.toLowerCase()]);
     }
@@ -1550,6 +1554,18 @@ class SkiaBoard {
     }
     const t = e.changedTouches[0];
     if (t) this.onMouseUp({ clientX: t.clientX, clientY: t.clientY });
+    // 双击缩放：全指抬起后，若 300ms 内再次点击则缩放（放大1.6倍 / 已放大则缩回）
+    if (e.touches.length === 0 && this.tool !== 'text' && t) {
+      const now = Date.now();
+      if (this._lastTap && now - this._lastTap < 300) {
+        const rect = this.interactionCanvas.getBoundingClientRect();
+        const mx = t.clientX - rect.left, my = t.clientY - rect.top;
+        this.zoomAt(mx, my, this.scale > 1.5 ? -0.5 : 0.6);
+        this._lastTap = 0;
+      } else {
+        this._lastTap = now;
+      }
+    }
   }
 
   /* ── TOAST ── */

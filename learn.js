@@ -81,6 +81,11 @@
       }
       const hall = document.getElementById('lesson-hall');
       if (hall) hall.style.display = 'flex';
+      // 退出时隐藏移动端学练控件
+      const mobileNext = document.getElementById('mobile-next-step');
+      if (mobileNext) mobileNext.style.display = 'none';
+      const mobileLearnToggle = document.getElementById('mobile-learn-toggle');
+      if (mobileLearnToggle) mobileLearnToggle.style.display = 'none';
     }
 
     nextStep() {
@@ -186,6 +191,22 @@
       if (nextBtn) nextBtn.textContent = this.currentStep === total - 1 ? '✅ 完成' : '下一步 →';
       const titleEl = document.getElementById('learn-lesson-title');
       if (titleEl) titleEl.textContent = `${this.currentLesson.emoji} ${this.currentLesson.title}`;
+      // 移动端：同步悬浮「下一步」按钮 + 学练抽屉收起按钮
+      this._syncMobileFloating();
+      const mobileLearnToggle = document.getElementById('mobile-learn-toggle');
+      if (mobileLearnToggle) mobileLearnToggle.style.display = window.matchMedia('(max-width: 600px)').matches ? 'inline-block' : 'none';
+    }
+
+    /** 移动端：根据学练抽屉开合状态同步悬浮「下一步」按钮（抽屉打开时隐藏，避免重叠） */
+    _syncMobileFloating() {
+      const panel = document.getElementById('learn-panel');
+      const onMobile = window.matchMedia('(max-width: 600px)').matches;
+      const ns = document.getElementById('mobile-next-step');
+      if (!ns) return;
+      const collapsed = !panel || !panel.classList.contains('open');
+      const show = onMobile && this.active && collapsed;
+      ns.style.display = show ? 'block' : 'none';
+      if (show) ns.textContent = this.currentLesson && this.currentStep >= this.currentLesson.steps.length - 1 ? '✅ 完成' : '下一步 →';
     }
 
     _showCompleteDialog() {

@@ -1479,24 +1479,77 @@ class SkiaBoard {
     this.toast('已复制');
   }
 
-  /* ── TOUCH ── */
+  /* ── TOUCH ──
+     单指 = 绘画/选择（映射到鼠标）
+     双指 = 捏合缩放 + 双指平移（不绘画）
+  */
+  _touchDist(a, b) {
+    return Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
+  }
   onTouchStart(e) {
     e.preventDefault();
-    if (e.touches.length === 1) {
+    if (e.touches.length === 2) {
+      // 开始双指手势
+      this._pinch = {
+        d0: this._touchDist(e.touches[0], e.touches[1]),
+        s0: this.scale,
+        vx0: this.viewX,
+        vy0: this.viewY,
+        mx0: (e.touches[0].clientX + e.touches[1].clientX) / 2,
+        my0: (e.touches[0].clientY + e.touches[1].clientY) / 2
+      };
+      if (this.isDrawing) this.endBrushStroke();
+      return;
+    }
+    if (e.touches.length === 1 && !this._pinch) {
       const t = e.touches[0];
       this.onMouseDown({ button: 0, clientX: t.clientX, clientY: t.clientY, shiftKey: false });
     }
   }
   onTouchMove(e) {
     e.preventDefault();
-    if (e.touches.length === 1) {
+    if (this._pinch && e.touches.length >= 2) {
+      const p = this._pinch;
+      const d = this._touchDist(e.touches[0], e.touches[1]);
+      const rect = this.interactionCanvas.getBoundingClientRect();
+      const mx = (e.touches[0].clientX + e.touches[1].clientX) / 2 - rect.left;
+      const my = (e.touches[0].clientY + e.touches[1].clientY) / 2 - rect.top;
+      // 捏合缩放：以当前双指中点为中心
+      const delta = d / p.d0;
+      let ns = p.s0 * delta;
+      ns = Math.max(0.05, Math.min(50, ns));
+      this.viewX = mx - (mx - p.vx0) * (ns / p.s0);
+      this.viewY = my - (my - p.vy0) * (ns / p.s0);
+      this.scale = ns;
+      // 双指平移
+      const dmx = mx - (p.mx0 - rect.left);
+      const dmy = my - (p.my0 - rect.top);
+      this.viewX += dmx;
+      this.viewY += dmy;
+      p.mx0 = mx + rect.left; p.my0 = my + rect.top;
+      p.d0 = d;
+      document.getElementById('zoom-label').textContent = Math.round(this.scale * 100) + '%';
+      this.render();
+      return;
+    }
+    if (e.touches.length === 1 && !this._pinch) {
       const t = e.touches[0];
       this.onMouseMove({ clientX: t.clientX, clientY: t.clientY });
     }
   }
   onTouchEnd(e) {
+    if (e.touches.length < 2 && this._pinch) {
+      this._pinch = null;
+    }
+    if (e.touches.length === 1) {
+      // 双指手势结束，剩余一根手指继续作为鼠标
+      const t = e.touches[0];
+      this.onMouseMove({ clientX: t.clientX, clientY: t.clientY });
+      this.onMouseDown({ button: 0, clientX: t.clientX, clientY: t.clientY, shiftKey: false });
+      return;
+    }
     const t = e.changedTouches[0];
-    this.onMouseUp({ clientX: t.clientX, clientY: t.clientY });
+    if (t) this.onMouseUp({ clientX: t.clientX, clientY: t.clientY });
   }
 
   /* ── TOAST ── */

@@ -13,6 +13,8 @@
       this.active = false;
       this.refCanvas = null;
       this.refCtx = null;
+      this.hallQuery = '';
+      this.hallFilter = 'all';
     }
 
     initReferenceLayer() {
@@ -73,7 +75,10 @@
       const learnBar = document.getElementById('learn-topbar');
       if (learnBar) learnBar.style.display = 'none';
       const panel = document.getElementById('learn-panel');
-      if (panel) panel.style.display = 'none';
+      if (panel) {
+        panel.style.display = 'none';
+        panel.classList.remove('open');
+      }
       const hall = document.getElementById('lesson-hall');
       if (hall) hall.style.display = 'flex';
     }
@@ -159,7 +164,10 @@
 
     _showLearnPanel() {
       const panel = document.getElementById('learn-panel');
-      if (panel) panel.style.display = 'flex';
+      if (panel) {
+        panel.style.display = 'flex';
+        panel.classList.add('open');
+      }
     }
 
     _updateStepUI() {
@@ -284,36 +292,67 @@
       const hall = document.getElementById('lesson-hall');
       if (!hall) return;
       const lessons = window.LESSONS || [];
+      const completedCount = window.badgeManager && window.badgeManager.data
+        ? Object.keys(window.badgeManager.data.stats.lessonsCompleted).length : 0;
       const ageGroups = [
         { key: 'kindergarten', label: '🧒 幼儿园', desc: '3-6岁 · 涂鸦启蒙' },
         { key: 'primary', label: '👦 小学', desc: '7-12岁 · 分步跟学' },
         { key: 'middle', label: '🧑‍🎓 中学', desc: '13-18岁 · 技巧提升' },
         { key: 'adult', label: '👨‍💼 成人', desc: '18岁+ · 解压创作' }
       ];
+      const q = (this.hallQuery || '').trim().toLowerCase();
+      const f = this.hallFilter || 'all';
+      const filtered = lessons.filter(l => {
+        if (f !== 'all' && l.ageGroup !== f) return false;
+        if (q) {
+          const hay = (l.title + ' ' + l.description + ' ' + (l.emoji || '')).toLowerCase();
+          if (!hay.includes(q)) return false;
+        }
+        return true;
+      });
       let html = `
         <div class="hall-header">
           <div class="hall-logo">⬡ <span>Skia</span>Board</div>
           <div class="hall-slogan">跟着画，一起画，人人会画画</div>
           <div class="hall-subtitle">开源免费的简笔画学练平台 · 支持多人协作</div>
         </div>
+        <div class="hall-stats">
+          <div class="hall-stat"><div class="num">${lessons.length}<span> 篇</span></div><div class="lbl">全部教程</div></div>
+          <div class="hall-stat"><div class="num">${completedCount}<span> 篇</span></div><div class="lbl">已完成</div></div>
+          <div class="hall-stat"><div class="num">${ageGroups.length}<span> 个</span></div><div class="lbl">学段</div></div>
+        </div>
+        <div class="hall-controls">
+          <input class="hall-search" id="hall-search" type="search" placeholder="🔍 搜索教程标题或简介…" value="${this._esc(this.hallQuery)}">
+          <div class="hall-chips">
+            <button class="hall-chip${f === 'all' ? ' active' : ''}" data-f="all" onclick="learnMode.setHallFilter('all')">全部 <span class="cnt">${lessons.length}</span></button>
+            ${ageGroups.map(ag => {
+              const n = lessons.filter(l => l.ageGroup === ag.key).length;
+              return `<button class="hall-chip${f === ag.key ? ' active' : ''}" data-f="${ag.key}" onclick="learnMode.setHallFilter('${ag.key}')">${ag.label.replace('🧒 ','').replace('👦 ','').replace('🧑‍🎓 ','').replace('👨‍💼 ','')} <span class="cnt">${n}</span></button>`;
+            }).join('')}
+          </div>
+        </div>
         <div class="hall-actions">
           <button class="hall-btn primary" onclick="document.getElementById('lesson-hall').style.display='none'">🎨 自由绘画</button>
           <button class="hall-btn" onclick="showBadgesPanel()">🏆 我的徽章</button>
         </div>
       `;
+      if (filtered.length === 0) {
+        html += `<div class="hall-empty">没有找到匹配的教程，换个关键词试试～</div>`;
+      }
       ageGroups.forEach(ag => {
-        const groupLessons = lessons.filter(l => l.ageGroup === ag.key);
+        const groupLessons = filtered.filter(l => l.ageGroup === ag.key);
         if (groupLessons.length === 0) return;
-        html += `<div class="hall-section"><div class="hall-section-title">${ag.label}</div><div class="hall-section-desc">${ag.desc}</div><div class="hall-lesson-grid">`;
+        const allInGroup = lessons.filter(l => l.ageGroup === ag.key).length;
+        html += `<div class="hall-section"><div class="hall-section-title">${ag.label} <span style="font-size:12px;color:rgba(255,255,255,0.4)">${groupLessons.length}/${allInGroup}</span></div><div class="hall-section-desc">${ag.desc}</div><div class="hall-lesson-grid">`;
         groupLessons.forEach(lesson => {
           const completed = window.badgeManager && window.badgeManager.data.stats.lessonsCompleted[lesson.id];
           const stars = '★'.repeat(lesson.difficulty) + '☆'.repeat(5 - lesson.difficulty);
           html += `
             <div class="lesson-card" onclick="learnMode.enter('${lesson.id}')">
               <div class="lesson-emoji">${lesson.emoji}</div>
-              <div class="lesson-name">${lesson.title}</div>
+              <div class="lesson-name">${this._esc(lesson.title)}</div>
               <div class="lesson-meta"><span class="lesson-stars">${stars}</span><span class="lesson-duration">${lesson.duration}分钟</span></div>
-              <div class="lesson-desc">${lesson.description}</div>
+              <div class="lesson-desc">${this._esc(lesson.description)}</div>
               ${completed ? '<div class="lesson-completed">✓ 已完成</div>' : '<div class="lesson-start">开始练习 →</div>'}
             </div>
           `;
@@ -328,6 +367,16 @@
         </div>
       `;
       hall.innerHTML = html;
+      const input = document.getElementById('hall-search');
+      if (input) input.addEventListener('input', e => { this.hallQuery = e.target.value; this.renderLessonHall(); });
+    }
+
+    setHallFilter(f) { this.hallFilter = f; this.renderLessonHall(); }
+
+    _esc(s) {
+      return String(s == null ? '' : s)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
     }
   }
 

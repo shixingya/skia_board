@@ -6,11 +6,19 @@
 
 **开源免费的全民简笔画学练平台** — 支持多人实时协作、分龄教材体系、学练模式、徽章成就、朋友圈分享
 
+[![Stars](https://img.shields.io/github/stars/shixingya/skia_board?style=social&label=Star)](https://github.com/shixingya/skia_board)
+[![Forks](https://img.shields.io/github/forks/shixingya/skia_board?style=social&label=Fork)](https://github.com/shixingya/skia_board)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](#贡献教程)
-[![Pure Frontend](https://img.shields.io/badge/纯前端-无需后端-blue.svg)](#快速开始)
+[![Issues](https://img.shields.io/github/issues/shixingya/skia_board)](https://github.com/shixingya/skia_board/issues)
+[![Repo Size](https://img.shields.io/github/repo-size/shixingya/skia_board)]()
+[![Last Commit](https://img.shields.io/github/last-commit/shixingya/skia_board)]()
 
-[在线体验](https://shixingya.github.io/skia_board/) · [功能特性](#-核心特性) · [教程贡献](#-贡献你的教程) · [路线图](#-路线图)
+[在线体验](https://shixingya.github.io/skia_board/) · [功能特性](#-核心特性) · [界面预览](#-界面预览) · [教程贡献](#-贡献你的教程) · [路线图](#-路线图)
+
+<p align="center">
+  <img src="docs/screenshots/home.jpg" alt="SkiaBoard 课程大厅" width="720" />
+</p>
 
 </div>
 
@@ -27,6 +35,22 @@
 | 🎨 **专业画板** | 画笔/钢笔/形状/文字/布尔运算/图层/对齐/撤销重做，Figma 级体验 |
 | 👥 **多人协作** | （开发中）基于 Yjs CRDT 的实时协作，支持课堂房间 |
 | 📦 **零依赖部署** | 纯前端 HTML+JS，下载即用，无需构建，无需后端 |
+
+---
+
+## 🖼️ 界面预览
+
+| 课程大厅（分龄课程） | 学练模式（描红底稿） |
+|:---:|:---:|
+| <img src="docs/screenshots/home.jpg" alt="课程大厅" width="420" /> | <img src="docs/screenshots/tutorial.jpg" alt="学练模式" width="420" /> |
+
+| 完成弹窗（撒花 ✨ + 称号 + 徽章） | 徽章面板（16 枚徽章 + 称号卡） |
+|:---:|:---:|
+| <img src="docs/screenshots/completion.jpg" alt="完成弹窗" width="420" /> | <img src="docs/screenshots/badges.jpg" alt="徽章面板" width="420" /> |
+
+| 朋友圈分享卡片（竖版 750×1200，画完即可晒） |
+|:---:|
+| <img src="docs/screenshots/share-card.jpg" alt="朋友圈分享卡" width="300" /> |
 
 ---
 

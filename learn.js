@@ -17,14 +17,15 @@
 
     initReferenceLayer() {
       if (this.refCanvas) return;
-      const container = document.getElementById('canvas-container');
-      if (!container) return;
-      this.refCanvas = document.createElement('canvas');
-      this.refCanvas.id = 'reference-canvas';
-      this.refCanvas.style.cssText = 'position:absolute;top:0;left:0;pointer-events:none;z-index:1;';
-      const main = document.getElementById('main-canvas');
-      if (main && main.nextSibling) container.insertBefore(this.refCanvas, main.nextSibling);
-      else container.appendChild(this.refCanvas);
+      this.refCanvas = document.getElementById('reference-canvas');
+      if (!this.refCanvas) {
+        const container = document.getElementById('canvas-container');
+        if (!container) return;
+        this.refCanvas = document.createElement('canvas');
+        this.refCanvas.id = 'reference-canvas';
+        this.refCanvas.style.cssText = 'position:absolute;top:0;left:0;pointer-events:none;z-index:1;';
+        container.appendChild(this.refCanvas);
+      }
       this.refCtx = this.refCanvas.getContext('2d');
       this._resizeRefCanvas();
       window.addEventListener('resize', () => this._resizeRefCanvas());
@@ -134,7 +135,7 @@
     }
 
     _drawReference() {
-      if (!this.refCtx || !this.currentLesson) return;
+      if (!this.refCtx || !this.currentLesson || !window.app) return;
       const ctx = this.refCtx;
       ctx.clearRect(0, 0, this.refCanvas.width, this.refCanvas.height);
       if (!this.referenceVisible) return;

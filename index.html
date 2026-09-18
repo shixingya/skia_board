@@ -140,7 +140,7 @@
 <div id="badge-toast">
   <div class="badge-emoji" id="badge-toast-emoji">🏆</div>
   <div class="badge-info">
-    <div class="badge-unlock-label">🎉 解锁新徽章</div>
+    <div class="badge-unlock-label">🎉 解锁新徽章 · <span id="badge-toast-rarity">稀有</span></div>
     <div class="badge-name" id="badge-toast-name">徽章名称</div>
     <div class="badge-desc" id="badge-toast-desc">徽章描述</div>
   </div>
@@ -377,6 +377,8 @@
         document.getElementById('badge-toast-emoji').textContent = badge.emoji;
         document.getElementById('badge-toast-name').textContent = badge.name;
         document.getElementById('badge-toast-desc').textContent = badge.description;
+        const rarityEl = document.getElementById('badge-toast-rarity');
+        if (rarityEl && badge.rarityLabel) rarityEl.textContent = badge.rarityLabel;
         toast.classList.add('show');
         clearTimeout(window._badgeToastTimer);
         window._badgeToastTimer = setTimeout(function () { toast.classList.remove('show'); }, 4000);

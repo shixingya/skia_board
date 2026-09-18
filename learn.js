@@ -183,10 +183,13 @@
       const lesson = this.currentLesson;
       if (!lesson) return;
       let newBadges = [];
+      let titleInfo = null;
       if (window.badgeManager) {
         const all = window.badgeManager.getAll();
         newBadges = all.filter(b => b.unlocked).slice(-3);
+        titleInfo = window.badgeManager.getTitle();
       }
+      const confetti = this._createConfetti();
       const overlay = document.createElement('div');
       overlay.id = 'complete-overlay';
       overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px;';
@@ -200,8 +203,14 @@
       title.style.cssText = 'font-size:24px;font-weight:700;color:#fff;margin-bottom:8px;';
       const subtitle = document.createElement('div');
       subtitle.textContent = `你完成了「${lesson.title}」`;
-      subtitle.style.cssText = 'font-size:15px;color:rgba(255,255,255,0.7);margin-bottom:20px;';
+      subtitle.style.cssText = 'font-size:15px;color:rgba(255,255,255,0.7);margin-bottom:16px;';
       dialog.appendChild(celebrate); dialog.appendChild(title); dialog.appendChild(subtitle);
+      if (titleInfo && titleInfo.name) {
+        const titleBar = document.createElement('div');
+        titleBar.style.cssText = 'display:flex;align-items:center;justify-content:center;gap:8px;background:rgba(255,255,255,0.06);border:1px solid rgba(124,111,205,0.3);border-radius:20px;padding:6px 16px;margin-bottom:16px;font-size:13px;color:#fff;';
+        titleBar.innerHTML = `<span style="font-size:18px;">${titleInfo.emoji}</span><span>当前称号：<b>${titleInfo.name}</b></span><span style="color:rgba(255,255,255,0.5);font-size:11px;">徽章 ${titleInfo.unlockedCount}/${titleInfo.total}</span>`;
+        dialog.appendChild(titleBar);
+      }
       if (newBadges.length > 0) {
         const badgeLabel = document.createElement('div');
         badgeLabel.textContent = '✨ 获得徽章';
@@ -212,7 +221,8 @@
         newBadges.forEach(b => {
           const badgeEl = document.createElement('div');
           badgeEl.style.cssText = 'text-align:center;';
-          badgeEl.innerHTML = `<div style="font-size:32px;margin-bottom:4px;">${b.emoji}</div><div style="font-size:11px;color:rgba(255,255,255,0.8);">${b.name}</div>`;
+          const g = b.gradient && b.gradient.length ? `linear-gradient(135deg,${b.gradient[0]},${b.gradient[1]})` : 'linear-gradient(135deg,#ffd700,#ff8c00)';
+          badgeEl.innerHTML = `<div style="width:64px;height:64px;border-radius:50%;background:${g};display:flex;align-items:center;justify-content:center;font-size:30px;margin:0 auto 6px;box-shadow:0 4px 16px rgba(0,0,0,0.35), inset 0 -4px 8px rgba(0,0,0,0.15);border:2px solid rgba(255,255,255,0.4);">${b.emoji}</div><div style="font-size:11px;color:rgba(255,255,255,0.85);">${b.name}</div>`;
           badgeRow.appendChild(badgeEl);
         });
         dialog.appendChild(badgeRow);
@@ -244,11 +254,29 @@
       btnRow.appendChild(shareBtn); btnRow.appendChild(continueBtn);
       dialog.appendChild(btnRow); dialog.appendChild(backBtn);
       overlay.appendChild(dialog);
-      overlay.onclick = (e) => { if (e.target === overlay) document.body.removeChild(overlay); };
+      if (confetti) document.body.appendChild(confetti);
+      overlay.onclick = (e) => { if (e.target === overlay) { document.body.removeChild(overlay); if (confetti && confetti.parentNode) document.body.removeChild(confetti); } };
       document.body.appendChild(overlay);
       const style = document.createElement('style');
-      style.textContent = '@keyframes bounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }';
+      style.textContent = '@keyframes bounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} } @keyframes confettiFall { 0%{transform:translateY(0) rotate(0deg);opacity:1} 100%{transform:translateY(110vh) rotate(720deg);opacity:0.2} }';
       document.head.appendChild(style);
+    }
+
+    /** 生成撒花粒子层 */
+    _createConfetti() {
+      try {
+        const confetti = document.createElement('div');
+        confetti.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;overflow:hidden;z-index:10001;';
+        const colors = ['#ff6b6b', '#ffd93d', '#6bcb77', '#4ecdc4', '#7c6fcd', '#f093fb', '#ff9f43'];
+        for (let i = 0; i < 26; i++) {
+          const p = document.createElement('div');
+          const size = 6 + Math.random() * 6;
+          const rot = Math.floor(Math.random() * 360);
+          p.style.cssText = `position:absolute;left:${Math.random() * 100}%;top:-24px;width:${size}px;height:${size * 0.55}px;background:${colors[i % colors.length]};border-radius:2px;opacity:${0.75 + Math.random() * 0.25};transform:rotate(${rot}deg);animation:confettiFall ${2 + Math.random() * 2.2}s linear ${Math.random() * 0.9}s infinite;`;
+          confetti.appendChild(p);
+        }
+        return confetti;
+      } catch (e) { return null; }
     }
 
     renderLessonHall() {
@@ -314,11 +342,25 @@
     const panel = document.createElement('div');
     panel.style.cssText = 'background:linear-gradient(135deg,#1a1a2e,#16213e);border-radius:20px;padding:28px;max-width:500px;width:100%;border:1px solid rgba(124,111,205,0.3);max-height:85vh;overflow-y:auto;';
     const unlockedCount = all.filter(b => b.unlocked).length;
+    const titleInfo = window.badgeManager.getTitle();
+    const titleBlock = titleInfo && titleInfo.name ? `
+      <div style="display:flex;align-items:center;gap:10px;background:linear-gradient(135deg,rgba(124,111,205,0.2),rgba(78,205,196,0.15));border:1px solid rgba(124,111,205,0.35);border-radius:12px;padding:12px 14px;margin-bottom:16px;">
+        <div style="font-size:32px;">${titleInfo.emoji}</div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:11px;color:rgba(255,255,255,0.5);">当前称号</div>
+          <div style="font-size:18px;font-weight:700;color:#fff;">${titleInfo.name}</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:16px;font-weight:700;color:#4ecdc4;">${titleInfo.unlockedCount}<span style="font-size:11px;color:rgba(255,255,255,0.5);">/${titleInfo.total}</span></div>
+          <div style="font-size:10px;color:rgba(255,255,255,0.4);">已解锁徽章</div>
+        </div>
+      </div>` : '';
     panel.innerHTML = `
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
         <div style="font-size:20px;font-weight:700;color:#fff;">🏆 我的徽章</div>
         <div style="font-size:14px;color:rgba(255,255,255,0.6);">${unlockedCount}/${all.length}</div>
       </div>
+      ${titleBlock}
       <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;">
         <div style="text-align:center;padding:10px;background:rgba(255,255,255,0.05);border-radius:10px;"><div style="font-size:20px;font-weight:700;color:#4ecdc4;">${stats.totalDrawings}</div><div style="font-size:11px;color:rgba(255,255,255,0.5);">画作</div></div>
         <div style="text-align:center;padding:10px;background:rgba(255,255,255,0.05);border-radius:10px;"><div style="font-size:20px;font-weight:700;color:#7c6fcd;">${Object.keys(stats.lessonsCompleted).length}</div><div style="font-size:11px;color:rgba(255,255,255,0.5);">教程</div></div>

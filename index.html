@@ -46,7 +46,7 @@
     #main-canvas { position: absolute; top: 0; left: 0; cursor: crosshair; z-index: 0; }
     #reference-canvas { position: absolute; top: 0; left: 0; pointer-events: none; z-index: 1; }
     #overlay-canvas { position: absolute; top: 0; left: 0; cursor: crosshair; pointer-events: none; z-index: 2; }
-    #interaction-canvas { position: absolute; top: 0; left: 0; cursor: crosshair; z-index: 3; }
+    #interaction-canvas { position: absolute; top: 0; left: 0; cursor: crosshair; z-index: 3; touch-action: none; }
     #learn-panel { display: none; width: 260px; background: linear-gradient(180deg, #1e1e2e, #1a1a24); border-left: 1px solid rgba(124,111,205,0.3); flex-direction: column; padding: 16px; gap: 12px; z-index: 50; flex-shrink: 0; }
     .learn-panel-title { font-size: 11px; font-family: 'DM Mono', monospace; color: var(--accent2); text-transform: uppercase; letter-spacing: 1px; }
     #learn-hint { font-size: 14px; line-height: 1.6; color: var(--text); background: rgba(124,111,205,0.1); border: 1px solid rgba(124,111,205,0.2); border-radius: 10px; padding: 14px; min-height: 80px; }
@@ -123,14 +123,68 @@
     .hall-footer { text-align: center; margin-top: 20px; font-size: 12px; color: rgba(255,255,255,0.4); line-height: 2; }
     .hall-github { color: var(--accent2); text-decoration: none; font-family: 'DM Mono', monospace; font-size: 11px; }
     .hall-github:hover { text-decoration: underline; }
+    /* 课程大厅：搜索 + 筛选 + 计数 */
+    .hall-stats { display: flex; justify-content: center; gap: 16px; margin: 6px 0 18px; flex-wrap: wrap; }
+    .hall-stat { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 10px 18px; text-align: center; min-width: 90px; }
+    .hall-stat .num { font-size: 22px; font-weight: 700; color: #fff; }
+    .hall-stat .num span { color: var(--accent2); }
+    .hall-stat .lbl { font-size: 11px; color: rgba(255,255,255,0.5); margin-top: 2px; }
+    .hall-controls { display: flex; flex-direction: column; align-items: center; gap: 10px; width: 100%; max-width: 800px; margin: 0 auto 26px; }
+    .hall-search { width: 100%; max-width: 420px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); border-radius: 12px; padding: 12px 16px; font-size: 14px; color: #fff; outline: none; }
+    .hall-search:focus { border-color: var(--accent); }
+    .hall-search::placeholder { color: rgba(255,255,255,0.35); }
+    .hall-chips { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+    .hall-chip { padding: 7px 16px; border-radius: 20px; font-size: 13px; cursor: pointer; border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.7); transition: all 0.15s; }
+    .hall-chip.active { background: linear-gradient(135deg, var(--accent), var(--accent2)); border-color: transparent; color: #fff; font-weight: 600; }
+    .hall-chip .cnt { opacity: 0.75; font-size: 11px; }
+    .hall-empty { text-align: center; color: rgba(255,255,255,0.4); padding: 40px 0; font-size: 14px; }
     ::-webkit-scrollbar { width: 4px; }
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: var(--panel-border); border-radius: 2px; }
     @media (max-width: 768px) {
-      #learn-panel { width: 200px; }
-      #right-panel { width: 180px; }
+      #learn-panel { width: 220px; }
+      #right-panel { width: 190px; }
       .hall-lesson-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+      #topbar { flex-wrap: wrap; height: auto; min-height: 44px; padding: 6px 10px; }
+      #topbar-actions { flex-wrap: wrap; gap: 6px; }
     }
+    /* ===== 手机（≤600px）：横屏铺开、面板改抽屉 ===== */
+    @media (max-width: 600px) {
+      body { overflow: hidden; }
+      #topbar { height: auto; min-height: 48px; padding: 6px 8px; gap: 6px; }
+      .logo { font-size: 14px; }
+      #topbar-actions { margin-left: auto; gap: 5px; }
+      #topbar-actions .btn { padding: 6px 9px; font-size: 11px; white-space: nowrap; }
+      #learn-topbar { height: auto; min-height: 44px; padding: 6px 8px; gap: 8px; flex-wrap: wrap; }
+      #learn-lesson-title { font-size: 12px; }
+      #workspace { position: relative; flex-direction: column; }
+      #canvas-container { flex: 1; min-height: 0; order: 2; }
+      /* 工具栏改成底部横向滚动条 */
+      #toolbar { width: 100%; height: auto; flex-direction: row; align-items: center; overflow-x: auto; border-right: none; border-top: 1px solid var(--panel-border); padding: 6px 8px; gap: 2px; order: 3; -webkit-overflow-scrolling: touch; }
+      .tool-group { flex-direction: row; width: auto; border-bottom: none; padding: 0; gap: 2px; }
+      .tool-group + .tool-group { border-left: 1px solid var(--panel-border); margin-left: 4px; padding-left: 4px; }
+      .tool-btn { width: 44px; height: 44px; }
+      .tool-tip { display: none; }
+      /* 属性面板：右侧抽屉，默认收起 */
+      #right-panel { position: absolute; top: 0; right: 0; bottom: 0; width: 80vw; max-width: 320px; z-index: 120; display: none; border-left: 1px solid rgba(124,111,205,0.3); box-shadow: -8px 0 30px rgba(0,0,0,0.5); }
+      #right-panel.open { display: flex; }
+      /* 学练面板：底部抽屉 */
+      #learn-panel { position: absolute; left: 0; right: 0; bottom: 0; width: 100%; max-height: 42vh; z-index: 110; display: none; border-left: none; border-top: 1px solid rgba(124,111,205,0.3); border-radius: 16px 16px 0 0; box-shadow: 0 -8px 30px rgba(0,0,0,0.5); overflow-y: auto; }
+      #learn-panel.open { display: flex; }
+      #statusbar { display: none; }
+      #zoom-controls { bottom: auto; top: 10px; left: 50%; }
+      /* 右上角浮动面板切换按钮（仅手机显示） */
+      #mobile-panel-toggle { display: flex; }
+      .hall-lesson-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+      #lesson-hall { padding: 24px 14px 40px; }
+      .hall-logo { font-size: 28px; }
+      .hall-slogan { font-size: 16px; }
+      .hall-stat { min-width: 76px; padding: 8px 12px; }
+      .hall-stat .num { font-size: 18px; }
+      .lesson-card { padding: 12px; }
+    }
+    /* 移动端属性面板切换按钮：默认隐藏 */
+    #mobile-panel-toggle { display: none; position: absolute; top: 10px; right: 10px; z-index: 130; background: var(--panel); border: 1px solid var(--panel-border); color: var(--text); width: 42px; height: 42px; border-radius: 10px; align-items: center; justify-content: center; font-size: 18px; cursor: pointer; }
   </style>
 </head>
 <body>
@@ -227,6 +281,7 @@
       <button class="zoom-btn" onclick="app.zoom(0.1)">+</button>
       <button class="zoom-btn" onclick="app.resetZoom()" title="重置">⌂</button>
     </div>
+    <button id="mobile-panel-toggle" onclick="toggleMobilePanel()" title="属性">⚙</button>
   </div>
 
   <div id="learn-panel">
@@ -395,6 +450,22 @@
       }
     }
   }
+  function toggleMobilePanel() {
+    const panel = document.getElementById('right-panel');
+    if (panel) panel.classList.toggle('open');
+  }
+  // 点击画布关闭已展开的移动端属性抽屉
+  document.addEventListener('click', function (e) {
+    const panel = document.getElementById('right-panel');
+    if (!panel) return;
+    const insidePanel = panel.contains(e.target);
+    const toggleBtn = document.getElementById('mobile-panel-toggle');
+    const insideToggle = toggleBtn && toggleBtn.contains(e.target);
+    const onMobile = window.matchMedia('(max-width: 600px)').matches;
+    if (onMobile && !insidePanel && !insideToggle && panel.classList.contains('open')) {
+      panel.classList.remove('open');
+    }
+  });
 </script>
 </body>
 </html>

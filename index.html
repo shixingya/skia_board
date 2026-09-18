@@ -3,405 +3,175 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SkiaBoard — 专业画板</title>
+  <title>SkiaBoard — 全民简笔画学练平台</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Sora:wght@300;400;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Sora:wght@300;400;600;700&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
     :root {
-      --bg: #111113;
-      --panel: #1a1a1e;
-      --panel-border: #2a2a30;
-      --accent: #7c6fcd;
-      --accent2: #4ecdc4;
-      --text: #e8e8f0;
-      --text-dim: #888899;
-      --danger: #ff6b6b;
-      --tool-size: 40px;
-      --sidebar-w: 60px;
-      --prop-w: 220px;
+      --bg: #111113; --panel: #1a1a1e; --panel-border: #2a2a30;
+      --accent: #7c6fcd; --accent2: #4ecdc4; --text: #e8e8f0;
+      --text-dim: #888899; --danger: #ff6b6b;
+      --tool-size: 40px; --sidebar-w: 60px; --prop-w: 220px;
     }
-
-    body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: 'Sora', sans-serif;
-      height: 100vh;
-      width: 100vw;
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-    }
-
-    /* ── TOP BAR ── */
-    #topbar {
-      height: 44px;
-      background: var(--panel);
-      border-bottom: 1px solid var(--panel-border);
-      display: flex;
-      align-items: center;
-      padding: 0 16px;
-      gap: 12px;
-      z-index: 100;
-      flex-shrink: 0;
-    }
-    .logo {
-      font-size: 15px;
-      font-weight: 600;
-      letter-spacing: -0.5px;
-      color: var(--text);
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
+    body { background: var(--bg); color: var(--text); font-family: 'Sora', sans-serif; height: 100vh; width: 100vw; overflow: hidden; display: flex; flex-direction: column; }
+    #topbar { height: 44px; background: var(--panel); border-bottom: 1px solid var(--panel-border); display: flex; align-items: center; padding: 0 16px; gap: 12px; z-index: 100; flex-shrink: 0; }
+    .logo { font-size: 15px; font-weight: 600; letter-spacing: -0.5px; color: var(--text); display: flex; align-items: center; gap: 6px; cursor: pointer; }
     .logo span { color: var(--accent); }
-    #topbar-actions {
-      margin-left: auto;
-      display: flex;
-      gap: 8px;
-      align-items: center;
-    }
-    .btn {
-      background: var(--panel-border);
-      border: 1px solid #333340;
-      color: var(--text);
-      padding: 5px 12px;
-      border-radius: 6px;
-      font-size: 12px;
-      font-family: 'DM Mono', monospace;
-      cursor: pointer;
-      transition: all 0.15s;
-    }
+    #topbar-actions { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+    .btn { background: var(--panel-border); border: 1px solid #333340; color: var(--text); padding: 5px 12px; border-radius: 6px; font-size: 12px; font-family: 'DM Mono', monospace; cursor: pointer; transition: all 0.15s; }
     .btn:hover { background: #2e2e38; border-color: var(--accent); }
     .btn.danger:hover { background: rgba(255,107,107,0.15); border-color: var(--danger); color: var(--danger); }
     .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
     .btn.primary:hover { background: #6a5fc0; }
-
-    /* ── MAIN LAYOUT ── */
-    #workspace {
-      display: flex;
-      flex: 1;
-      overflow: hidden;
-    }
-
-    /* ── LEFT TOOLBAR ── */
-    #toolbar {
-      width: var(--sidebar-w);
-      background: var(--panel);
-      border-right: 1px solid var(--panel-border);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 10px 0;
-      gap: 4px;
-      z-index: 50;
-    }
-    .tool-group {
-      width: 100%;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 2px;
-      padding: 4px 0;
-      border-bottom: 1px solid var(--panel-border);
-    }
+    .btn.accent2 { background: var(--accent2); border-color: var(--accent2); color: #0a3a36; font-weight: 600; }
+    .btn.accent2:hover { background: #3dbdb4; }
+    #learn-topbar { display: none; height: 44px; background: linear-gradient(90deg, rgba(124,111,205,0.2), rgba(78,205,196,0.15)); border-bottom: 1px solid rgba(124,111,205,0.3); align-items: center; padding: 0 16px; gap: 12px; z-index: 99; flex-shrink: 0; }
+    #learn-lesson-title { font-size: 14px; font-weight: 600; color: var(--text); }
+    #learn-progress { font-size: 12px; color: var(--text-dim); font-family: 'DM Mono', monospace; }
+    .learn-progress-wrap { flex: 1; max-width: 200px; height: 6px; background: var(--panel-border); border-radius: 3px; overflow: hidden; }
+    #learn-progress-bar { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent2)); border-radius: 3px; transition: width 0.3s; width: 0%; }
+    .learn-topbar-actions { margin-left: auto; display: flex; gap: 8px; }
+    #workspace { display: flex; flex: 1; overflow: hidden; }
+    #toolbar { width: var(--sidebar-w); background: var(--panel); border-right: 1px solid var(--panel-border); display: flex; flex-direction: column; align-items: center; padding: 10px 0; gap: 4px; z-index: 50; }
+    .tool-group { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 4px 0; border-bottom: 1px solid var(--panel-border); }
     .tool-group:last-child { border-bottom: none; }
-    .tool-btn {
-      width: var(--tool-size);
-      height: var(--tool-size);
-      background: transparent;
-      border: 1px solid transparent;
-      border-radius: 8px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: var(--text-dim);
-      transition: all 0.15s;
-      position: relative;
-    }
+    .tool-btn { width: var(--tool-size); height: var(--tool-size); background: transparent; border: 1px solid transparent; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--text-dim); transition: all 0.15s; position: relative; }
     .tool-btn:hover { background: rgba(124,111,205,0.1); color: var(--text); border-color: var(--panel-border); }
     .tool-btn.active { background: rgba(124,111,205,0.2); color: var(--accent); border-color: var(--accent); }
     .tool-btn svg { width: 18px; height: 18px; }
-    .tool-tip {
-      position: absolute;
-      left: calc(100% + 10px);
-      background: #2e2e38;
-      border: 1px solid var(--panel-border);
-      color: var(--text);
-      font-size: 11px;
-      font-family: 'DM Mono', monospace;
-      padding: 4px 8px;
-      border-radius: 5px;
-      white-space: nowrap;
-      pointer-events: none;
-      opacity: 0;
-      transition: opacity 0.15s;
-      z-index: 999;
-    }
+    .tool-tip { position: absolute; left: calc(100% + 10px); background: #2e2e38; border: 1px solid var(--panel-border); color: var(--text); font-size: 11px; font-family: 'DM Mono', monospace; padding: 4px 8px; border-radius: 5px; white-space: nowrap; pointer-events: none; opacity: 0; transition: opacity 0.15s; z-index: 999; }
     .tool-btn:hover .tool-tip { opacity: 1; }
-
-    /* ── CANVAS AREA ── */
-    #canvas-container {
-      flex: 1;
-      position: relative;
-      overflow: hidden;
-      background: #0d0d10;
-      background-image:
-        radial-gradient(circle, #22222a 1px, transparent 1px);
-      background-size: 24px 24px;
-    }
-    #main-canvas {
-      position: absolute;
-      top: 0; left: 0;
-      cursor: crosshair;
-    }
-    #overlay-canvas {
-      position: absolute;
-      top: 0; left: 0;
-      cursor: crosshair;
-      pointer-events: none;
-    }
-    #interaction-canvas {
-      position: absolute;
-      top: 0; left: 0;
-      cursor: crosshair;
-    }
-
-    /* ── RIGHT PANEL ── */
-    #right-panel {
-      width: var(--prop-w);
-      background: var(--panel);
-      border-left: 1px solid var(--panel-border);
-      display: flex;
-      flex-direction: column;
-      overflow-y: auto;
-      font-size: 12px;
-    }
-    .panel-section {
-      padding: 12px;
-      border-bottom: 1px solid var(--panel-border);
-    }
-    .panel-title {
-      font-size: 10px;
-      font-family: 'DM Mono', monospace;
-      color: var(--text-dim);
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      margin-bottom: 10px;
-    }
-    .prop-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 8px;
-      gap: 8px;
-    }
+    #canvas-container { flex: 1; position: relative; overflow: hidden; background: #0d0d10; background-image: radial-gradient(circle, #22222a 1px, transparent 1px); background-size: 24px 24px; }
+    #main-canvas { position: absolute; top: 0; left: 0; cursor: crosshair; z-index: 0; }
+    #reference-canvas { position: absolute; top: 0; left: 0; pointer-events: none; z-index: 1; }
+    #overlay-canvas { position: absolute; top: 0; left: 0; cursor: crosshair; pointer-events: none; z-index: 2; }
+    #interaction-canvas { position: absolute; top: 0; left: 0; cursor: crosshair; z-index: 3; }
+    #learn-panel { display: none; width: 260px; background: linear-gradient(180deg, #1e1e2e, #1a1a24); border-left: 1px solid rgba(124,111,205,0.3); flex-direction: column; padding: 16px; gap: 12px; z-index: 50; flex-shrink: 0; }
+    .learn-panel-title { font-size: 11px; font-family: 'DM Mono', monospace; color: var(--accent2); text-transform: uppercase; letter-spacing: 1px; }
+    #learn-hint { font-size: 14px; line-height: 1.6; color: var(--text); background: rgba(124,111,205,0.1); border: 1px solid rgba(124,111,205,0.2); border-radius: 10px; padding: 14px; min-height: 80px; }
+    .learn-step-buttons { display: flex; gap: 8px; }
+    .learn-step-buttons .btn { flex: 1; padding: 8px; font-size: 12px; }
+    .learn-ref-controls { display: flex; flex-direction: column; gap: 8px; padding-top: 8px; border-top: 1px solid var(--panel-border); }
+    .learn-ref-controls label { font-size: 11px; color: var(--text-dim); display: flex; justify-content: space-between; }
+    #ref-opacity-slider { -webkit-appearance: none; width: 100%; height: 4px; border-radius: 2px; background: var(--panel-border); outline: none; }
+    #ref-opacity-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%; background: var(--accent2); cursor: pointer; }
+    #right-panel { width: var(--prop-w); background: var(--panel); border-left: 1px solid var(--panel-border); display: flex; flex-direction: column; overflow-y: auto; font-size: 12px; }
+    .panel-section { padding: 12px; border-bottom: 1px solid var(--panel-border); }
+    .panel-title { font-size: 10px; font-family: 'DM Mono', monospace; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
+    .prop-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; gap: 8px; }
     .prop-label { color: var(--text-dim); font-size: 11px; }
-    .prop-input {
-      background: var(--bg);
-      border: 1px solid var(--panel-border);
-      border-radius: 5px;
-      color: var(--text);
-      padding: 4px 8px;
-      font-size: 12px;
-      font-family: 'DM Mono', monospace;
-      width: 80px;
-      text-align: right;
-    }
+    .prop-input { background: var(--bg); border: 1px solid var(--panel-border); border-radius: 5px; color: var(--text); padding: 4px 8px; font-size: 12px; font-family: 'DM Mono', monospace; width: 80px; text-align: right; }
     .prop-input:focus { outline: none; border-color: var(--accent); }
-    .color-swatch {
-      width: 28px;
-      height: 28px;
-      border-radius: 6px;
-      border: 2px solid var(--panel-border);
-      cursor: pointer;
-      position: relative;
-      overflow: hidden;
-      transition: border-color 0.15s;
-    }
+    .color-swatch { width: 28px; height: 28px; border-radius: 6px; border: 2px solid var(--panel-border); cursor: pointer; position: relative; overflow: hidden; transition: border-color 0.15s; }
     .color-swatch:hover { border-color: var(--accent); }
-    .color-swatch input[type=color] {
-      position: absolute;
-      width: 200%;
-      height: 200%;
-      top: -50%;
-      left: -50%;
-      cursor: pointer;
-      opacity: 0;
-    }
-    .slider {
-      -webkit-appearance: none;
-      width: 100%;
-      height: 4px;
-      border-radius: 2px;
-      background: var(--panel-border);
-      outline: none;
-      margin: 6px 0;
-    }
-    .slider::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      width: 14px;
-      height: 14px;
-      border-radius: 50%;
-      background: var(--accent);
-      cursor: pointer;
-    }
-
-    /* ── BOOLEAN OPS ── */
-    .bool-ops {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 6px;
-    }
-    .bool-btn {
-      background: var(--bg);
-      border: 1px solid var(--panel-border);
-      border-radius: 6px;
-      color: var(--text-dim);
-      padding: 7px 6px;
-      font-size: 10px;
-      font-family: 'DM Mono', monospace;
-      cursor: pointer;
-      text-align: center;
-      transition: all 0.15s;
-    }
+    .color-swatch input[type=color] { position: absolute; width: 200%; height: 200%; top: -50%; left: -50%; cursor: pointer; opacity: 0; }
+    .slider { -webkit-appearance: none; width: 100%; height: 4px; border-radius: 2px; background: var(--panel-border); outline: none; margin: 6px 0; }
+    .slider::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%; background: var(--accent); cursor: pointer; }
+    .bool-ops { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+    .bool-btn { background: var(--bg); border: 1px solid var(--panel-border); border-radius: 6px; color: var(--text-dim); padding: 7px 6px; font-size: 10px; font-family: 'DM Mono', monospace; cursor: pointer; text-align: center; transition: all 0.15s; }
     .bool-btn:hover { border-color: var(--accent); color: var(--accent); background: rgba(124,111,205,0.08); }
-
-    /* ── LAYERS ── */
-    #layers-list {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-      max-height: 200px;
-      overflow-y: auto;
-    }
-    .layer-item {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      padding: 5px 8px;
-      border-radius: 5px;
-      cursor: pointer;
-      font-size: 11px;
-      color: var(--text-dim);
-      background: transparent;
-      border: 1px solid transparent;
-      transition: all 0.1s;
-    }
+    #layers-list { display: flex; flex-direction: column; gap: 2px; max-height: 200px; overflow-y: auto; }
+    .layer-item { display: flex; align-items: center; gap: 6px; padding: 5px 8px; border-radius: 5px; cursor: pointer; font-size: 11px; color: var(--text-dim); background: transparent; border: 1px solid transparent; transition: all 0.1s; }
     .layer-item:hover { background: rgba(255,255,255,0.04); }
     .layer-item.selected { background: rgba(124,111,205,0.12); border-color: rgba(124,111,205,0.3); color: var(--text); }
     .layer-dot { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
     .layer-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .layer-del { opacity: 0; color: var(--danger); font-size: 14px; line-height: 1; padding: 0 2px; }
     .layer-item:hover .layer-del { opacity: 0.6; }
-    .layer-del:hover { opacity: 1 !important; }
-
-    /* ── STATUS BAR ── */
-    #statusbar {
-      height: 26px;
-      background: var(--panel);
-      border-top: 1px solid var(--panel-border);
-      display: flex;
-      align-items: center;
-      padding: 0 14px;
-      gap: 16px;
-      font-size: 10px;
-      font-family: 'DM Mono', monospace;
-      color: var(--text-dim);
-      flex-shrink: 0;
-      z-index: 100;
-    }
+    #statusbar { height: 26px; background: var(--panel); border-top: 1px solid var(--panel-border); display: flex; align-items: center; padding: 0 14px; gap: 16px; font-size: 10px; font-family: 'DM Mono', monospace; color: var(--text-dim); flex-shrink: 0; z-index: 100; }
     #statusbar span { display: flex; align-items: center; gap: 4px; }
-
-    /* ── ZOOM CONTROLS ── */
-    #zoom-controls {
-      position: absolute;
-      bottom: 14px;
-      left: 50%;
-      transform: translateX(-50%);
-      display: flex;
-      gap: 4px;
-      background: var(--panel);
-      border: 1px solid var(--panel-border);
-      border-radius: 8px;
-      padding: 4px;
-      z-index: 50;
-    }
-    .zoom-btn {
-      background: transparent;
-      border: none;
-      color: var(--text-dim);
-      width: 28px; height: 28px;
-      border-radius: 5px;
-      cursor: pointer;
-      font-size: 14px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all 0.1s;
-    }
+    #zoom-controls { position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%); display: flex; gap: 4px; background: var(--panel); border: 1px solid var(--panel-border); border-radius: 8px; padding: 4px; z-index: 50; }
+    .zoom-btn { background: transparent; border: none; color: var(--text-dim); width: 28px; height: 28px; border-radius: 5px; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; transition: all 0.1s; }
     .zoom-btn:hover { background: rgba(255,255,255,0.08); color: var(--text); }
     #zoom-label { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--text-dim); padding: 0 6px; display: flex; align-items: center; }
-
-    /* ── SELECTION HANDLES ── */
-    .select-handle {
-      position: absolute;
-      width: 8px; height: 8px;
-      background: white;
-      border: 2px solid var(--accent);
-      border-radius: 2px;
-      transform: translate(-50%, -50%);
-      z-index: 10;
-    }
-
-    /* ── TOAST ── */
-    #toast {
-      position: fixed;
-      bottom: 50px;
-      left: 50%;
-      transform: translateX(-50%) translateY(20px);
-      background: #2e2e38;
-      border: 1px solid var(--panel-border);
-      color: var(--text);
-      padding: 8px 16px;
-      border-radius: 8px;
-      font-size: 12px;
-      font-family: 'DM Mono', monospace;
-      opacity: 0;
-      transition: all 0.3s;
-      pointer-events: none;
-      z-index: 9999;
-    }
+    #toast { position: fixed; bottom: 50px; left: 50%; transform: translateX(-50%) translateY(20px); background: #2e2e38; border: 1px solid var(--panel-border); color: var(--text); padding: 8px 16px; border-radius: 8px; font-size: 12px; font-family: 'DM Mono', monospace; opacity: 0; transition: all 0.3s; pointer-events: none; z-index: 9999; }
     #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-
-    /* Scrollbar */
+    #badge-toast { position: fixed; top: 80px; right: 20px; background: linear-gradient(135deg, #1a1a2e, #16213e); border: 1px solid rgba(255,215,0,0.4); border-radius: 12px; padding: 14px 18px; display: flex; align-items: center; gap: 12px; z-index: 9999; opacity: 0; transform: translateX(120%); transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); box-shadow: 0 8px 30px rgba(0,0,0,0.4); max-width: 280px; }
+    #badge-toast.show { opacity: 1; transform: translateX(0); }
+    #badge-toast .badge-emoji { font-size: 32px; }
+    #badge-toast .badge-info { flex: 1; }
+    #badge-toast .badge-unlock-label { font-size: 10px; color: #ffd700; font-family: 'DM Mono', monospace; text-transform: uppercase; }
+    #badge-toast .badge-name { font-size: 14px; font-weight: 600; color: #fff; }
+    #badge-toast .badge-desc { font-size: 11px; color: rgba(255,255,255,0.6); }
+    #text-input-wrapper { position: fixed; display: none; z-index: 1000; }
+    #text-input { background: transparent; border: none; border-bottom: 2px solid var(--accent); color: var(--text); font-family: 'Sora', sans-serif; font-size: 18px; outline: none; min-width: 100px; }
+    #lesson-hall { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 50%, #16213e 100%); z-index: 200; overflow-y: auto; display: flex; flex-direction: column; align-items: center; padding: 40px 20px 60px; }
+    .hall-header { text-align: center; margin-bottom: 30px; max-width: 600px; }
+    .hall-logo { font-size: 36px; font-weight: 700; color: #fff; margin-bottom: 8px; letter-spacing: -1px; }
+    .hall-logo span { color: var(--accent); }
+    .hall-slogan { font-size: 20px; color: var(--accent2); font-weight: 600; margin-bottom: 8px; }
+    .hall-subtitle { font-size: 13px; color: rgba(255,255,255,0.5); }
+    .hall-actions { display: flex; gap: 12px; margin-bottom: 36px; flex-wrap: wrap; justify-content: center; }
+    .hall-btn { padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.05); color: #fff; transition: all 0.2s; }
+    .hall-btn:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.3); }
+    .hall-btn.primary { background: linear-gradient(135deg, var(--accent), var(--accent2)); border: none; color: #fff; }
+    .hall-btn.primary:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(124,111,205,0.4); }
+    .hall-section { width: 100%; max-width: 800px; margin-bottom: 32px; }
+    .hall-section-title { font-size: 18px; font-weight: 700; color: #fff; margin-bottom: 4px; }
+    .hall-section-desc { font-size: 12px; color: rgba(255,255,255,0.4); margin-bottom: 14px; }
+    .hall-lesson-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 12px; }
+    .lesson-card { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 16px; cursor: pointer; transition: all 0.2s; text-align: center; }
+    .lesson-card:hover { background: rgba(124,111,205,0.12); border-color: rgba(124,111,205,0.4); transform: translateY(-3px); }
+    .lesson-emoji { font-size: 36px; margin-bottom: 8px; }
+    .lesson-name { font-size: 14px; font-weight: 600; color: #fff; margin-bottom: 6px; }
+    .lesson-meta { display: flex; justify-content: center; gap: 8px; font-size: 10px; color: rgba(255,255,255,0.4); margin-bottom: 6px; font-family: 'DM Mono', monospace; }
+    .lesson-stars { color: #ffd700; }
+    .lesson-desc { font-size: 11px; color: rgba(255,255,255,0.5); line-height: 1.4; margin-bottom: 8px; }
+    .lesson-start { font-size: 11px; color: var(--accent2); font-weight: 600; }
+    .lesson-completed { font-size: 11px; color: #4ecdc4; font-weight: 600; }
+    .hall-footer { text-align: center; margin-top: 20px; font-size: 12px; color: rgba(255,255,255,0.4); line-height: 2; }
+    .hall-github { color: var(--accent2); text-decoration: none; font-family: 'DM Mono', monospace; font-size: 11px; }
+    .hall-github:hover { text-decoration: underline; }
     ::-webkit-scrollbar { width: 4px; }
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: var(--panel-border); border-radius: 2px; }
+    @media (max-width: 768px) {
+      #learn-panel { width: 200px; }
+      #right-panel { width: 180px; }
+      .hall-lesson-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+    }
   </style>
 </head>
 <body>
 
-<!-- TOP BAR -->
+<div id="lesson-hall"></div>
+
+<div id="badge-toast">
+  <div class="badge-emoji" id="badge-toast-emoji">🏆</div>
+  <div class="badge-info">
+    <div class="badge-unlock-label">🎉 解锁新徽章</div>
+    <div class="badge-name" id="badge-toast-name">徽章名称</div>
+    <div class="badge-desc" id="badge-toast-desc">徽章描述</div>
+  </div>
+</div>
+
 <div id="topbar">
-  <div class="logo">⬡ <span>Skia</span>Board</div>
+  <div class="logo" onclick="showLessonHall()">⬡ <span>Skia</span>Board</div>
   <div id="topbar-actions">
     <button class="btn" onclick="app.undo()">↩ 撤销</button>
     <button class="btn" onclick="app.redo()">↪ 重做</button>
     <button class="btn danger" onclick="app.clearAll()">清空</button>
+    <button class="btn" onclick="showBadgesPanel()">🏆 徽章</button>
+    <button class="btn accent2" onclick="shareGenerator.showPreview()">📸 分享</button>
     <button class="btn primary" onclick="app.exportPNG()">导出 PNG</button>
   </div>
 </div>
 
-<!-- WORKSPACE -->
-<div id="workspace">
+<div id="learn-topbar">
+  <div id="learn-lesson-title">教程名</div>
+  <div class="learn-progress-wrap"><div id="learn-progress-bar"></div></div>
+  <div id="learn-progress">第 1 / 3 步</div>
+  <div class="learn-topbar-actions">
+    <button class="btn" id="toggle-ref-btn" onclick="learnMode.toggleReference()">👁 隐藏底稿</button>
+    <button class="btn" onclick="learnMode.exit()">🏠 返回课程</button>
+  </div>
+</div>
 
-  <!-- LEFT TOOLBAR -->
+<div id="workspace">
   <div id="toolbar">
     <div class="tool-group">
-      <button class="tool-btn active" data-tool="select" onclick="app.setTool('select')" title="选择">
+      <button class="tool-btn active" data-tool="select" onclick="app.setTool('select')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 3l14 9-7 1-4 7z"/></svg>
         <span class="tool-tip">选择 (V)</span>
       </button>
@@ -446,9 +216,9 @@
     </div>
   </div>
 
-  <!-- CANVAS CONTAINER -->
   <div id="canvas-container">
     <canvas id="main-canvas"></canvas>
+    <canvas id="reference-canvas"></canvas>
     <canvas id="overlay-canvas"></canvas>
     <canvas id="interaction-canvas"></canvas>
     <div id="zoom-controls">
@@ -459,9 +229,23 @@
     </div>
   </div>
 
-  <!-- RIGHT PANEL -->
+  <div id="learn-panel">
+    <div class="learn-panel-title">📖 学练指引</div>
+    <div id="learn-hint">点击"下一步"开始学习</div>
+    <div class="learn-step-buttons">
+      <button class="btn" id="prev-step-btn" onclick="learnMode.prevStep()">← 上一步</button>
+      <button class="btn primary" id="next-step-btn" onclick="learnMode.nextStep()">下一步 →</button>
+    </div>
+    <div class="learn-ref-controls">
+      <label><span>底稿透明度</span><span id="ref-opacity-val">35%</span></label>
+      <input type="range" id="ref-opacity-slider" min="10" max="80" value="35" oninput="learnMode.setReferenceOpacity(this.value/100);document.getElementById('ref-opacity-val').textContent=this.value+'%'">
+    </div>
+    <div style="font-size:11px;color:var(--text-dim);line-height:1.6;padding-top:8px;border-top:1px solid var(--panel-border);">
+      💡 半透明底稿是描红参考，在上面跟着画即可。画完点"完成"解锁徽章并分享！
+    </div>
+  </div>
+
   <div id="right-panel">
-    <!-- Fill & Stroke -->
     <div class="panel-section">
       <div class="panel-title">外观</div>
       <div class="prop-row">
@@ -494,8 +278,6 @@
         <input type="range" class="slider" id="opacity-slider" min="0" max="100" value="100" oninput="app.setOpacity(this.value)">
       </div>
     </div>
-
-    <!-- Brush settings -->
     <div class="panel-section" id="brush-settings">
       <div class="panel-title">画笔设置</div>
       <div class="prop-row" style="flex-direction:column;align-items:stretch;gap:4px">
@@ -515,8 +297,6 @@
         </select>
       </div>
     </div>
-
-    <!-- Boolean Ops -->
     <div class="panel-section">
       <div class="panel-title">路径运算</div>
       <div class="bool-ops">
@@ -526,8 +306,6 @@
         <button class="bool-btn" onclick="app.boolOp('xor')">⊻ 异或</button>
       </div>
     </div>
-
-    <!-- Align -->
     <div class="panel-section">
       <div class="panel-title">对齐</div>
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px">
@@ -539,8 +317,6 @@
         <button class="bool-btn" onclick="app.align('bottom')">⇣ 下</button>
       </div>
     </div>
-
-    <!-- Selected object props -->
     <div class="panel-section" id="obj-props" style="display:none">
       <div class="panel-title">变换</div>
       <div class="prop-row">
@@ -560,8 +336,6 @@
         <input class="prop-input" type="number" id="prop-r" value="0" oninput="app.updateSelectedProp('r',this.value)">
       </div>
     </div>
-
-    <!-- Layers -->
     <div class="panel-section" style="flex:1">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
         <div class="panel-title" style="margin-bottom:0">图层</div>
@@ -575,7 +349,6 @@
   </div>
 </div>
 
-<!-- STATUS BAR -->
 <div id="statusbar">
   <span id="stat-tool">工具: 选择</span>
   <span id="stat-pos">X: 0, Y: 0</span>
@@ -583,14 +356,43 @@
   <span id="stat-selected">未选择</span>
 </div>
 
-<!-- TOAST -->
 <div id="toast"></div>
 
-<!-- Text input overlay -->
 <div id="text-input-wrapper" style="position:fixed;display:none;z-index:1000">
   <input id="text-input" style="background:transparent;border:none;border-bottom:2px solid var(--accent);color:var(--text);font-family:'Sora',sans-serif;font-size:18px;outline:none;min-width:100px" placeholder="输入文字...">
 </div>
 
 <script src="app.js"></script>
+<script src="lessons.js"></script>
+<script src="badges.js"></script>
+<script src="share.js"></script>
+<script src="learn.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    if (window.learnMode) window.learnMode.renderLessonHall();
+    if (window.badgeManager) {
+      window.badgeManager.onUnlock(function (badge) {
+        const toast = document.getElementById('badge-toast');
+        if (!toast) return;
+        document.getElementById('badge-toast-emoji').textContent = badge.emoji;
+        document.getElementById('badge-toast-name').textContent = badge.name;
+        document.getElementById('badge-toast-desc').textContent = badge.description;
+        toast.classList.add('show');
+        clearTimeout(window._badgeToastTimer);
+        window._badgeToastTimer = setTimeout(function () { toast.classList.remove('show'); }, 4000);
+      });
+    }
+  });
+  function showLessonHall() {
+    const hall = document.getElementById('lesson-hall');
+    if (hall) {
+      hall.style.display = 'flex';
+      if (window.learnMode) {
+        window.learnMode.renderLessonHall();
+        if (window.learnMode.active) window.learnMode.exit();
+      }
+    }
+  }
+</script>
 </body>
 </html>

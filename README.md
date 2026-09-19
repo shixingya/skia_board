@@ -11,13 +11,13 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](#贡献教程)
 [![Issues](https://img.shields.io/github/issues/shixingya/skia_board)](https://github.com/shixingya/skia_board/issues)
-[![Repo Size](https://img.shields.io/github/repo-size/shixingya/skia_board)]()
-[![Last Commit](https://img.shields.io/github/last-commit/shixingya/skia_board)]()
+[![Repo Size](https://img.shields.io/github/repo-size/shixingya/skia_board)](https://github.com/shixingya/skia_board)
+[![Last Commit](https://img.shields.io/github/last-commit/shixingya/skia_board)](https://github.com/shixingya/skia_board/commits/main)
 
 [在线体验](https://shixingya.github.io/skia_board/) · [功能特性](#-核心特性) · [界面预览](#-界面预览) · [教程贡献](#-贡献你的教程) · [路线图](#-路线图)
 
 <p align="center">
-  <img src="docs/screenshots/home.jpg" alt="SkiaBoard 课程大厅" width="720" />
+  <img src="docs/screenshots/home.png" alt="SkiaBoard 课程大厅" width="720" />
 </p>
 
 </div>
@@ -43,15 +43,15 @@
 
 | 课程大厅（分龄课程） | 学练模式（描红底稿） |
 |:---:|:---:|
-| <img src="docs/screenshots/home.jpg" alt="课程大厅" width="420" /> | <img src="docs/screenshots/tutorial.jpg" alt="学练模式" width="420" /> |
+| <img src="docs/screenshots/home.png" alt="课程大厅" width="420" /> | <img src="docs/screenshots/tutorial.png" alt="学练模式" width="420" /> |
 
 | 完成弹窗（撒花 ✨ + 称号 + 徽章） | 徽章面板（16 枚徽章 + 称号卡） |
 |:---:|:---:|
-| <img src="docs/screenshots/completion.jpg" alt="完成弹窗" width="420" /> | <img src="docs/screenshots/badges.jpg" alt="徽章面板" width="420" /> |
+| <img src="docs/screenshots/completion.png" alt="完成弹窗" width="420" /> | <img src="docs/screenshots/badges.png" alt="徽章面板" width="420" /> |
 
 | 朋友圈分享卡片（竖版 750×1200，画完即可晒） |
 |:---:|
-| <img src="docs/screenshots/share-card.jpg" alt="朋友圈分享卡" width="300" /> |
+| <img src="docs/screenshots/share-card.png" alt="朋友圈分享卡" width="300" /> |
 
 ---
 
